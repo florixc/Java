@@ -12,7 +12,7 @@ public class Provaaa {
 	private JTextField textField;
 
 	/**
-	 * Launch the application.
+	 * Launch the allllllllpplication.
 	 */
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
