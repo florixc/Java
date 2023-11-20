@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<agenda>
+<persona>
+<nome>feregg</nome>
+<cognome>gillo</cognome>
+<numero>323424242</numero>
+</persona>
+<persona>
+<nome>girro</nome>
+<cognome>fruttolo</cognome>
+<numero>3232342324242</numero>
+</persona>
+<persona>
+<nome>tricco0</nome>
+<cognome>mucca</cognome>
+<numero>53453434</numero>
+</persona>
+</agenda>
+con orgoglio fatto con printwriter
