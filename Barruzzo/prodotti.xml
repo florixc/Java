@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<barruzzo>
+    <prodotti>
+        <prodotto>
+            <idprodotto>1</idprodotto>
+            <nome>cornetto</nome>
+            <prezzo>1.0</prezzo>
+            <quantita>1</quantita>
+        </prodotto>
+        <prodotto>
+            <idprodotto>2</idprodotto>
+            <nome>panino</nome>
+            <prezzo>2.0</prezzo>
+            <quantita>2</quantita>
+        </prodotto>
+        <prodotto>
+            <idprodotto>3</idprodotto>
+            <nome>pizzetta</nome>
+            <prezzo>2.0</prezzo>
+            <quantita>3</quantita>
+        </prodotto>
+    </prodotti>
+</barruzzo>
