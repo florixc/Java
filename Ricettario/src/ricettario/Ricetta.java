@@ -1,12 +1,21 @@
 package ricettario;
 
-public class Ricetta {
+public class Ricetta implements Comparable<Ricetta>{
 	private int idRicetta;
 	private String nome;
 	private String ingredienti;
 	private int tempistica;
 	private String procedimento;
 	private String categoria;
+	
+	@Override
+	public int compareTo(Ricetta o) {
+        int compa =  idRicetta-o.idRicetta; //ordina per idRicetta
+		
+        if (compa==0)
+        	compa = nome.compareTo(o.nome); //ordina per nome
+		return compa;
+	}
 	
 	@Override
 	public String toString() {
@@ -72,6 +81,8 @@ public class Ricetta {
 	public void setCategoria(String categoria) {
 		this.categoria = categoria;
 	}
+
+
 	
 	
 	

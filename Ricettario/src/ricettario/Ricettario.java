@@ -2,12 +2,22 @@ package ricettario;
 
 import java.awt.EventQueue;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+
+import nu.xom.Builder;
+import nu.xom.Document;
+import nu.xom.Element;
+import nu.xom.Elements;
+import nu.xom.ParsingException;
+import nu.xom.ValidityException;
+
 import javax.swing.JTextArea;
 import javax.swing.JButton;
 import java.awt.event.ActionListener;
@@ -15,7 +25,10 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.StringReader;
 import java.awt.event.ActionEvent;
+import javax.swing.JComboBox;
+import javax.swing.DefaultComboBoxModel;
 
 public class Ricettario {
 	private ArrayList<Ricetta> listaRicette;
@@ -27,6 +40,7 @@ public class Ricettario {
 	private JTextArea txtIngredienti;
 	private JTextArea txtProcedimento;
 	private JTextArea txtStampa;
+	private JComboBox cmbCategoria;
 	private JButton btnSalva;
 	private JButton btnAvanti;
 	private JButton btnIndietro;
@@ -58,10 +72,14 @@ public class Ricettario {
 	 */
 	public Ricettario() {
 		listaRicette = new ArrayList<Ricetta>();
+		apriXML();
 		iAttuale = 0;
 		initialize();
-		btnAvanti.setEnabled(false);
-		btnIndietro.setEnabled(false);
+		caricaRicetta(iAttuale);
+		abilitaAvantiIndietro(iAttuale);
+		/*
+		 * btnAvanti.setEnabled(false); btnIndietro.setEnabled(false);
+		 */
 
 		JButton btnCancella = new JButton("btnCancella");
 		btnCancella.addActionListener(new ActionListener() {
@@ -69,7 +87,7 @@ public class Ricettario {
 				btnCancellaActionPerformed(e);
 			}
 		});
-		btnCancella.setBounds(142, 331, 89, 23);
+		btnCancella.setBounds(141, 363, 89, 23);
 		frame.getContentPane().add(btnCancella);
 
 		btnCerca = new JButton("btnCerca");
@@ -96,7 +114,7 @@ public class Ricettario {
 				btnSalvaStampaActionPerformed(e);
 			}
 		});
-		btnSalvaStampa.setBounds(359, 378, 135, 23);
+		btnSalvaStampa.setBounds(390, 378, 135, 23);
 		frame.getContentPane().add(btnSalvaStampa);
 
 		btnApriStampa = new JButton("btnApriStampa");
@@ -105,9 +123,9 @@ public class Ricettario {
 				btnApriStampaActionPerformed(e);
 			}
 		});
-		btnApriStampa.setBounds(228, 378, 121, 23);
+		btnApriStampa.setBounds(255, 378, 121, 23);
 		frame.getContentPane().add(btnApriStampa);
-		
+
 		btnStampaXML = new JButton("btnStampaXML");
 		btnStampaXML.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -117,11 +135,136 @@ public class Ricettario {
 		btnStampaXML.setBounds(20, 403, 121, 23);
 		frame.getContentPane().add(btnStampaXML);
 
+		JButton btnOrdina = new JButton("btnOrdina");
+		btnOrdina.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				btnOrdinaActionPerformed(e);
+			}
+		});
+		btnOrdina.setBounds(151, 403, 121, 23);
+		frame.getContentPane().add(btnOrdina);
+
+		
+
+	}
+
+	private void btnOrdinaActionPerformed(ActionEvent e) {
+		Collections.sort(listaRicette);
+		iAttuale = 0;
+		caricaRicetta(iAttuale);
+		abilitaAvantiIndietro(iAttuale);
+		btnStampaActionPerformed(e);
 	}
 
 	private void btnStampaXMLActionPerformed(ActionEvent e) {
-		// TODO Auto-generated method stub
-		
+		/*
+		 * txtStampa.setText(""); String xml=""; xml+="<ricettario>\n";
+		 * xml+="<ricette>\n"; for (int i = 0; i < listaRicette.size(); i++) { Ricetta
+		 * ricetta = listaRicette.get(i); xml+="<ricetta>\n";
+		 * xml+="<idricetta>"+ricetta.getIdRicetta()+"</idricetta>\n";
+		 * xml+="<nome>"+ricetta.getIdRicetta()+"</nome>\n";
+		 * xml+="<ingredienti>"+ricetta.getIdRicetta()+"</ingredienti>\n";
+		 * xml+="<tempistica>"+ricetta.getIdRicetta()+"</tempistica>\n";
+		 * xml+="<procedimento>"+ricetta.getIdRicetta()+"</procedimento>\n";
+		 * xml+="<categoria>"+ricetta.getIdRicetta()+"</categoria>\n";
+		 * xml+="</ricetta>\n"; } xml+="</ricette>\n"; xml+="</ricettario>\n";
+		 * txtStampa.setText(xml);
+		 */
+		txtStampa.setText(generaXML());
+	}
+
+	private void apriXML() {
+		String xml = "";
+		try {
+			FileReader fileReader = new FileReader("RicettarioXML.txt");
+			int data = fileReader.read();
+			while (data != -1) {
+				xml += "" + (char) data;
+				data = fileReader.read();
+			}
+		} catch (IOException ex) {
+			System.out.println("problemuccio");
+		}
+		importaXML(xml);
+	}
+
+	private void salvaXML() {
+		try {
+			FileWriter fileWriter = new FileWriter("RicettarioXML.txt", false);
+			PrintWriter printWriter = new PrintWriter(fileWriter);
+			printWriter.print(generaXML());
+			printWriter.close();
+			fileWriter.close();
+		} catch (IOException ex) {
+			System.out.println("problemuccio");
+		}
+	}
+
+	private void importaXML(String xml) {
+		listaRicette.removeAll(listaRicette);
+		Builder builder = new Builder();
+		try {
+			Document doc = builder.build(new StringReader(xml));
+			Element ricettario = doc.getRootElement();
+			Element ricette = ricettario.getFirstChildElement("ricette");
+			Elements ricettaLista = ricette.getChildElements("ricetta");
+			for (int i = 0; i < ricettaLista.size(); i++) {
+				Element ricetta = ricettaLista.get(i);
+				Element idricetta = ricetta.getFirstChildElement("idricetta");
+				Element nome = ricetta.getFirstChildElement("nome");
+				Element ingredienti = ricetta.getFirstChildElement("ingredienti");
+				Element tempistica = ricetta.getFirstChildElement("tempistica");
+				Element procedimento = ricetta.getFirstChildElement("procedimento");
+				Element categoria = ricetta.getFirstChildElement("categoria");
+				listaRicette.add(new Ricetta(Integer.parseInt(idricetta.getValue()), nome.getValue(),
+						ingredienti.getValue(), Integer.parseInt(tempistica.getValue()), procedimento.getValue(),
+						categoria.getValue()));
+
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	private String generaXML() {
+		Element ricettario = new Element("ricettario");
+
+		Element ricette = new Element("ricette");
+		ricettario.appendChild(ricette);
+		for (int i = 0; i < listaRicette.size(); i++) {
+			Element ricetta = new Element("ricetta");
+			ricette.appendChild(ricetta);
+
+			Ricetta r = listaRicette.get(i);
+
+			Element idricetta = new Element("idricetta");
+			ricetta.appendChild(idricetta);
+			idricetta.appendChild(r.getIdRicetta() + "");
+
+			Element nome = new Element("nome");
+			ricetta.appendChild(nome);
+			nome.appendChild(r.getNome() + "");
+
+			Element ingredienti = new Element("ingredienti");
+			ricetta.appendChild(ingredienti);
+			ingredienti.appendChild(r.getIngredienti() + "");
+
+			Element tempistica = new Element("tempistica");
+			ricetta.appendChild(tempistica);
+			tempistica.appendChild(r.getTempistica() + "");
+
+			Element procedimento = new Element("procedimento");
+			ricetta.appendChild(procedimento);
+			procedimento.appendChild(r.getProcedimento() + "");
+
+			Element categoria = new Element("categoria");
+			ricetta.appendChild(categoria);
+			categoria.appendChild(r.getCategoria() + "");
+		}
+		Document doc = new Document(ricettario);
+		return doc.toXML();
 	}
 
 	private void btnApriStampaActionPerformed(ActionEvent e) {
@@ -190,6 +333,7 @@ public class Ricettario {
 		txtStampa.setText("cancellato!");
 		iAttuale = i;
 		abilitaAvantiIndietro(i);
+		salvaXML();
 	}
 
 	/**
@@ -258,15 +402,16 @@ public class Ricettario {
 		txtCategoria.setColumns(10);
 		txtCategoria.setBounds(97, 244, 86, 20);
 		frame.getContentPane().add(txtCategoria);
+		/*
+		 * txtStampa = new JTextArea(); txtStampa.setText("txtStampa");
+		 * txtStampa.setBounds(282, 22, 221, 265);
+		 * frame.getContentPane().add(txtStampa);
+		 */
 
 		txtStampa = new JTextArea();
-		txtStampa.setText("txtStampa");
-		txtStampa.setBounds(282, 22, 221, 265);
-		frame.getContentPane().add(txtStampa);
-		/*
-		 * JScrollPane scrollPane = new JScrollPane(txtStampa); frame.add(scrollPane);
-		 * JPanel panel = new JPanel(); panel.add(scrollPane);
-		 */
+		JScrollPane scrollPane = new JScrollPane(txtStampa);
+		scrollPane.setBounds(282, 22, 221, 265);
+		frame.getContentPane().add(scrollPane);
 
 		JButton btnNuovo = new JButton("btnNuovo");
 		btnNuovo.addActionListener(new ActionListener() {
@@ -274,7 +419,7 @@ public class Ricettario {
 				btnNuovoActionPerformed(e);
 			}
 		});
-		btnNuovo.setBounds(20, 297, 89, 23);
+		btnNuovo.setBounds(42, 331, 89, 23);
 		frame.getContentPane().add(btnNuovo);
 
 		btnSalva = new JButton("btnSalva");
@@ -283,7 +428,7 @@ public class Ricettario {
 				btnSalvaActionPerformed(e);
 			}
 		});
-		btnSalva.setBounds(119, 297, 89, 23);
+		btnSalva.setBounds(141, 331, 89, 23);
 		frame.getContentPane().add(btnSalva);
 
 		btnAvanti = new JButton("btnAvanti");
@@ -310,14 +455,19 @@ public class Ricettario {
 				btnStampaActionPerformed(e);
 			}
 		});
-		btnStampa.setBounds(20, 331, 111, 23);
+		btnStampa.setBounds(20, 363, 111, 23);
 		frame.getContentPane().add(btnStampa);
 
 		/*
 		 * JScrollPane scrollPane = new JScrollPane(); scrollPane.setBounds(282, 133, 2,
 		 * 2); frame.getContentPane().add(scrollPane);
 		 */
-
+		cmbCategoria = new JComboBox();
+		cmbCategoria.setModel(
+				new DefaultComboBoxModel(new String[] { "antipasto", "primo", "secondo", "contorno", "ignota" }));
+		cmbCategoria.setBounds(87, 279, 106, 22);
+		frame.getContentPane().add(cmbCategoria);
+		// comboBox.add
 	}
 
 	private void caricaRicetta(int i) {
@@ -328,6 +478,13 @@ public class Ricettario {
 		txtTempistica.setText(ricetta.getTempistica() + "");
 		txtProcedimento.setText(ricetta.getProcedimento());
 		txtCategoria.setText(ricetta.getCategoria());
+		for (int j = 0; j < cmbCategoria.getItemCount(); j++) {
+            String item = (String) cmbCategoria.getItemAt(j);
+            if (item.equals(ricetta.getCategoria())) {
+            	cmbCategoria.setSelectedIndex(j);
+                break;
+            }
+        }
 	}
 
 	private void abilitaAvantiIndietro(int i) {
@@ -374,7 +531,8 @@ public class Ricettario {
 		String ingredienti = txtIngredienti.getText();
 		int tempistica = Integer.parseInt(txtTempistica.getText());
 		String procedimento = txtProcedimento.getText();
-		String categoria = txtCategoria.getText();
+		// String categoria = txtCategoria.getText();
+		String categoria = (String) cmbCategoria.getSelectedItem();
 		Ricetta ricetta = new Ricetta(idRicetta, nome, ingredienti, tempistica, procedimento, categoria);
 		listaRicette.add(ricetta);
 		txtStampa.setText("salvata la nuova ricetta\n");
@@ -385,6 +543,7 @@ public class Ricettario {
 			btnAvanti.setEnabled(false);
 			btnIndietro.setEnabled(true);
 		}
+		salvaXML();
 	}
 
 	private void btnNuovoActionPerformed(ActionEvent e) {
